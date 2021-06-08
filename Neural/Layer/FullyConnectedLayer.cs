@@ -1,5 +1,6 @@
 ﻿using Skotz.Neural.Activation;
 using Skotz.Neural.Utility;
+using System;
 
 namespace Skotz.Neural.Layer
 {
@@ -22,7 +23,7 @@ namespace Skotz.Neural.Layer
         {
             // Xavier (Glorot) random weight initialization
             var mean = 0.0;
-            var stdDev = 2.0 / (previousLayerSize + numberOfNeurons);
+            var stdDev = Math.Sqrt(2.0 / (previousLayerSize + numberOfNeurons));
             _random = new GaussianRandom(mean, stdDev);
 
             _previousLayerSize = previousLayerSize;
@@ -64,7 +65,7 @@ namespace Skotz.Neural.Layer
             return _activations;
         }
 
-        public double[] Backpropagate(double[] gradients)
+        public double[] Backpropagate(double[] gradients, double learningRate)
         {
             var nextGradients = new double[_previousLayerSize];
 
@@ -82,7 +83,7 @@ namespace Skotz.Neural.Layer
                     var weightGradientNP = gradients[n] * _inputs[p];
 
                     // Update weights based on gradients
-                    _weights[n, p] -= weightGradientNP * 0.5; // TODO: learning rate
+                    _weights[n, p] -= weightGradientNP * learningRate;
 
                     // Store the correct gradients to pass back to the previous layer
                     nextGradients[p] += weightGradientNP;
@@ -93,7 +94,7 @@ namespace Skotz.Neural.Layer
             for (int n = 0; n < _numberOfNeurons; n++)
             {
                 // Update biases based on gradients
-                _biases[n] -= gradients[n] * 0.5; // TODO: learning rate
+                _biases[n] -= gradients[n] * learningRate;
             }
 
             return nextGradients;

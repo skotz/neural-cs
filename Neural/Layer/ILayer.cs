@@ -6,6 +6,6 @@
 
         double[] FeedForward(double[] values);
 
-        double[] Backpropagate(double[] gradients);
+        double[] Backpropagate(double[] gradients, double learningRate);
     }
 }

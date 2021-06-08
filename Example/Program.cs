@@ -13,29 +13,40 @@ namespace Example
     {
         private static void Main(string[] args)
         {
-            var nn = new NeuralNetwork(new SquaredErrorLoss());
-            nn.Add(new FullyConnectedLayer(3, 10, new LeakyReLuActivation()));
-            nn.Add(new FullyConnectedLayer(10, 5, new LeakyReLuActivation()));
+            var nn = new NeuralNetwork(new SquaredErrorLoss(), 0.1);
+            nn.Add(new FullyConnectedLayer(3, 50, new LeakyReLuActivation()));
+            nn.Add(new FullyConnectedLayer(50, 20, new LeakyReLuActivation()));
+            nn.Add(new FullyConnectedLayer(20, 5, new LeakyReLuActivation()));
 
-            var data = new Sample()
+            var data1 = new Sample()
             {
                 Inputs = new double[] { -1, 0.5, 1 },
                 Outputs = new double[] { 0, 1, 0, 0, 0 }
+            }; 
+            var data2 = new Sample()
+            {
+                Inputs = new double[] { 1, 1, -0.25 },
+                Outputs = new double[] { 0, 0, 1, 0, 0 }
             };
 
-            var result = nn.FeedForward(data);
             var loss = 1.0;
 
+            var result = nn.FeedForward(data1);
             Console.WriteLine("Result: " + result.Outputs.Select(x => x.ToString("0.000")).Aggregate((c, n) => c + ", " + n));
 
-            for (int i = 0; i < 100 && loss > 0.001; i++)
+            result = nn.FeedForward(data2);
+            Console.WriteLine("Result: " + result.Outputs.Select(x => x.ToString("0.000")).Aggregate((c, n) => c + ", " + n));
+
+            for (int i = 0; i < 1000 && loss > 0.001; i++)
             {
-                loss = nn.Train(new List<ISample> { data });
+                loss = nn.Train(new List<ISample> { data1, data2 });
 
                 Console.WriteLine("Loss: " + loss);
 
-                result = nn.FeedForward(data);
+                result = nn.FeedForward(data1);
+                Console.WriteLine("Result: " + result.Outputs.Select(x => x.ToString("0.000")).Aggregate((c, n) => c + ", " + n));
 
+                result = nn.FeedForward(data2);
                 Console.WriteLine("Result: " + result.Outputs.Select(x => x.ToString("0.000")).Aggregate((c, n) => c + ", " + n));
             }
 

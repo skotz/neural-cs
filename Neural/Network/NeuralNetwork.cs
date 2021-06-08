@@ -10,11 +10,13 @@ namespace Skotz.Neural.Network
     {
         private List<ILayer> _layers;
         private ILoss _lossFunction;
+        private double _learningRate;
 
-        public NeuralNetwork(ILoss lossFunction)
+        public NeuralNetwork(ILoss lossFunction, double learningRate)
         {
             _layers = new List<ILayer>();
             _lossFunction = lossFunction;
+            _learningRate = learningRate;
         }
 
         public void Add(ILayer layer)
@@ -51,13 +53,13 @@ namespace Skotz.Neural.Network
                 // Backpropagation
                 for (int i = _layers.Count - 1; i >= 0; i--)
                 {
-                    gradients = _layers[i].Backpropagate(gradients);
+                    gradients = _layers[i].Backpropagate(gradients, _learningRate);
                 }
 
                 totalLoss += _lossFunction.Total(output.Outputs, sample.Outputs);
             }
 
-            return totalLoss;
+            return totalLoss / samples.Count;
         }
     }
 }
