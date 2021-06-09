@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Activation\HyperbolicTangentActivation.cs" />
     <Compile Include="Activation\IActivation.cs" />
     <Compile Include="Activation\LeakyReLuActivation.cs" />
     <Compile Include="Activation\ReLuActivation.cs" />
@@ -52,6 +53,7 @@
     <Compile Include="Utility\GaussianRandom.cs" />
     <Compile Include="Network\NeuralNetwork.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utility\ListShuffle.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

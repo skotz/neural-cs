@@ -4,7 +4,7 @@ namespace Skotz.Neural.Activation
 {
     public class LeakyReLuActivation : IActivation
     {
-        private double _factor = 0.01;
+        private double _factor = 0.3;
 
         public double Run(double value)
         {
@@ -14,6 +14,12 @@ namespace Skotz.Neural.Activation
         public double Derivative(double value)
         {
             return value > 0 ? 1 : _factor;
+        }
+
+        public double StandardDeviation(int inputs, int outputs)
+        {
+            // "He" initialization
+            return Math.Sqrt(4.0 / (inputs + outputs));
         }
     }
 }

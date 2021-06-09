@@ -13,5 +13,11 @@ namespace Skotz.Neural.Activation
         {
             return value > 0 ? 1 : 0;
         }
+
+        public double StandardDeviation(int inputs, int outputs)
+        {
+            // "He" initialization
+            return Math.Sqrt(4.0 / (inputs + outputs));
+        }
     }
 }

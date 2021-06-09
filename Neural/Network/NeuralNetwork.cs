@@ -1,6 +1,7 @@
 ﻿using Skotz.Neural.Layer;
 using Skotz.Neural.Loss;
 using Skotz.Neural.Sample;
+using Skotz.Neural.Utility;
 using System;
 using System.Collections.Generic;
 
@@ -42,6 +43,9 @@ namespace Skotz.Neural.Network
         public double Train(List<ISample> samples)
         {
             var totalLoss = 0.0;
+
+            // Shuffle samples
+            samples.Shuffle();
 
             foreach (var sample in samples)
             {

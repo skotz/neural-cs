@@ -14,21 +14,18 @@ namespace Skotz.Neural.Layer
         private double[,] _weights;
         private double[] _biases;
         private double[] _inputs;
-        private double[] _sums;
         private double[] _activations;
 
         public int Size => _numberOfNeurons;
 
         public FullyConnectedLayer(int previousLayerSize, int numberOfNeurons, IActivation activation)
         {
-            // Xavier (Glorot) random weight initialization
-            var mean = 0.0;
-            var stdDev = Math.Sqrt(2.0 / (previousLayerSize + numberOfNeurons));
-            _random = new GaussianRandom(mean, stdDev);
-
+            _activationFunction = activation;
             _previousLayerSize = previousLayerSize;
             _numberOfNeurons = numberOfNeurons;
-            _activationFunction = activation;
+
+            var stdDev = _activationFunction.StandardDeviation(previousLayerSize, numberOfNeurons);
+            _random = new GaussianRandom(0, stdDev);
 
             _weights = new double[numberOfNeurons, previousLayerSize];
             _biases = new double[numberOfNeurons];
@@ -46,7 +43,6 @@ namespace Skotz.Neural.Layer
         {
             // Save the inputs for backprop
             _inputs = values;
-            _sums = new double[_numberOfNeurons];
             _activations = new double[_numberOfNeurons];
 
             for (int n = 0; n < _numberOfNeurons; n++)
@@ -55,9 +51,6 @@ namespace Skotz.Neural.Layer
                 {
                     _activations[n] += _inputs[p] * _weights[n, p];
                 }
-
-                // Save the value before activation
-                _sums[n] = _activations[n] + _biases[n];
 
                 _activations[n] = _activationFunction.Run(_activations[n] + _biases[n]);
             }
@@ -73,6 +66,9 @@ namespace Skotz.Neural.Layer
             for (int n = 0; n < _numberOfNeurons; n++)
             {
                 gradients[n] *= _activationFunction.Derivative(_activations[n]);
+
+                // Clip the gradient to avoid diverging to infinity
+                gradients[n] = ClipGradient(gradients[n]);
             }
 
             // Gradients with respect to each weight
@@ -98,6 +94,11 @@ namespace Skotz.Neural.Layer
             }
 
             return nextGradients;
+        }
+
+        private double ClipGradient(double gradient)
+        {
+            return Math.Min(Math.Max(gradient, -1), 1);
         }
     }
 }

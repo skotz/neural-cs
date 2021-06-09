@@ -1,2 +1,4 @@
 # neural-cs
-Convolutional Neural Network in Pure C#
+Neural Network in Pure C#
+
+![xor](Docs/xor.png)
