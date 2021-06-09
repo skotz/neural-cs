@@ -14,7 +14,7 @@ namespace Example
     {
         private static void Main(string[] args)
         {
-            var nn = new NeuralNetwork(new SquaredErrorLoss(), 0.0001);
+            var nn = new NeuralNetwork(new SquaredErrorLoss(), 0.01);
             nn.Add(new FullyConnectedLayer(2, 5, new LeakyReLuActivation()));
             nn.Add(new FullyConnectedLayer(5, 5, new LeakyReLuActivation()));
             nn.Add(new FullyConnectedLayer(5, 1, new LeakyReLuActivation()));
@@ -56,7 +56,7 @@ namespace Example
 
             using (var w = new StreamWriter("results.csv"))
             {
-                for (int i = 0; i < 100000 && loss > 0.0001; i++)
+                for (int i = 0; i < 100000 && loss > 0.001; i++)
                 {
                     loss = nn.Train(new List<ISample> { data1, data2, data3, data4 });
 
