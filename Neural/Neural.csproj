@@ -33,6 +33,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -45,10 +46,13 @@
     <Compile Include="Activation\IActivation.cs" />
     <Compile Include="Activation\LeakyReLuActivation.cs" />
     <Compile Include="Activation\ReLuActivation.cs" />
+    <Compile Include="Layer\ConvolutionLayer.cs" />
+    <Compile Include="Layer\FlattenLayer.cs" />
     <Compile Include="Layer\FullyConnectedLayer.cs" />
     <Compile Include="Layer\ILayer.cs" />
     <Compile Include="Loss\ILoss.cs" />
     <Compile Include="Loss\SquaredErrorLoss.cs" />
+    <Compile Include="Sample\ImageSample.cs" />
     <Compile Include="Sample\ISample.cs" />
     <Compile Include="Utility\GaussianRandom.cs" />
     <Compile Include="Network\NeuralNetwork.cs" />

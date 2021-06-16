@@ -13,10 +13,8 @@ namespace Skotz.Neural.Layer
 
         private double[,] _weights;
         private double[] _biases;
-        private double[] _inputs;
-        private double[] _activations;
-
-        public int Size => _numberOfNeurons;
+        private double[,,] _inputs;
+        private double[,,] _activations;
 
         public FullyConnectedLayer(int previousLayerSize, int numberOfNeurons, IActivation activation)
         {
@@ -39,36 +37,36 @@ namespace Skotz.Neural.Layer
             }
         }
 
-        public double[] FeedForward(double[] values)
+        public double[,,] FeedForward(double[,,] values)
         {
             // Save the inputs for backprop
             _inputs = values;
-            _activations = new double[_numberOfNeurons];
+            _activations = new double[_numberOfNeurons, 1, 1];
 
             for (int n = 0; n < _numberOfNeurons; n++)
             {
                 for (int p = 0; p < _previousLayerSize; p++)
                 {
-                    _activations[n] += _inputs[p] * _weights[n, p];
+                    _activations[n, 0, 0] += _inputs[p, 0, 0] * _weights[n, p];
                 }
 
-                _activations[n] = _activationFunction.Run(_activations[n] + _biases[n]);
+                _activations[n, 0, 0] = _activationFunction.Run(_activations[n, 0, 0] + _biases[n]);
             }
 
             return _activations;
         }
 
-        public double[] Backpropagate(double[] gradients, double learningRate)
+        public double[,,] Backpropagate(double[,,] gradients, double learningRate)
         {
-            var nextGradients = new double[_previousLayerSize];
+            var nextGradients = new double[_previousLayerSize, 1, 1];
 
             // Gradients coming in are with respect to the result of the activation function
             for (int n = 0; n < _numberOfNeurons; n++)
             {
-                gradients[n] *= _activationFunction.Derivative(_activations[n]);
+                gradients[n, 0, 0] *= _activationFunction.Derivative(_activations[n, 0, 0]);
 
                 // Clip the gradient to avoid diverging to infinity
-                gradients[n] = ClipGradient(gradients[n]);
+                gradients[n, 0, 0] = ClipGradient(gradients[n, 0, 0]);
             }
 
             // Gradients with respect to each weight
@@ -76,13 +74,13 @@ namespace Skotz.Neural.Layer
             {
                 for (int p = 0; p < _previousLayerSize; p++)
                 {
-                    var weightGradientNP = gradients[n] * _inputs[p];
+                    var weightGradientNP = gradients[n, 0, 0] * _inputs[p, 0, 0];
 
                     // Update weights based on gradients
                     _weights[n, p] -= weightGradientNP * learningRate;
 
                     // Store the correct gradients to pass back to the previous layer
-                    nextGradients[p] += weightGradientNP;
+                    nextGradients[p, 0, 0] += weightGradientNP;
                 }
             }
 
@@ -90,7 +88,7 @@ namespace Skotz.Neural.Layer
             for (int n = 0; n < _numberOfNeurons; n++)
             {
                 // Update biases based on gradients
-                _biases[n] -= gradients[n] * learningRate;
+                _biases[n] -= gradients[n, 0, 0] * learningRate;
             }
 
             return nextGradients;
