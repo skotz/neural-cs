@@ -75,12 +75,13 @@ namespace Skotz.Neural.Layer
                 for (int p = 0; p < _previousLayerSize; p++)
                 {
                     var weightGradientNP = gradients[n, 0, 0] * _inputs[p, 0, 0];
+                    var inputGradientNP = gradients[n, 0, 0] * _weights[n, p];
 
                     // Update weights based on gradients
                     _weights[n, p] -= weightGradientNP * learningRate;
 
                     // Store the correct gradients to pass back to the previous layer
-                    nextGradients[p, 0, 0] += weightGradientNP;
+                    nextGradients[p, 0, 0] += inputGradientNP;
                 }
             }
 
