@@ -23,11 +23,10 @@ namespace Example
 
         private static void RunConvTest()
         {
-            var nn = new NeuralNetwork(new SquaredErrorLoss(), 0.01);
+            var nn = new NeuralNetwork(new SquaredErrorLoss(), 0.0001);
             nn.Add(new ConvolutionLayer(24, 24, 3, 3, 10, new LeakyReLuActivation()));
             nn.Add(new FlattenLayer(22, 22, 10));
-            nn.Add(new FullyConnectedLayer(22 * 22 * 10, 100, new LeakyReLuActivation()));
-            nn.Add(new FullyConnectedLayer(100, 2, new LeakyReLuActivation()));
+            nn.Add(new FullyConnectedLayer(22 * 22 * 10, 2, new LeakyReLuActivation()));
 
             var data1 = new ImageSample("../../../Data/Images/bear.png", new bool[] { true, false });
             var data2 = new ImageSample("../../../Data/Images/bird.png", new bool[] { false, true });

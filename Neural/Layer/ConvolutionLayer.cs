@@ -18,7 +18,7 @@ namespace Skotz.Neural.Layer
 
         private int _featureSize;
         private int _numberOfFeatures;
-        private bool _pad;
+        private int _pad;
         private int _stride;
 
         private double[,,,] _kernels;
@@ -38,11 +38,11 @@ namespace Skotz.Neural.Layer
             _numberOfFeatures = numberOfFeatures;
 
             // TODO
-            _pad = false;
+            _pad = 0;
             _stride = 1;
 
-            _outputWidth = _pad ? _previousLayerWidth : (_previousLayerWidth - _featureSize + 1);
-            _outputHeight = _pad ? _previousLayerHeight : (_previousLayerHeight - _featureSize + 1);
+            _outputWidth = _pad > 0 ? _previousLayerWidth : (_previousLayerWidth - _featureSize + 1);
+            _outputHeight = _pad > 0 ? _previousLayerHeight : (_previousLayerHeight - _featureSize + 1);
 
             var stdDev = _activationFunction.StandardDeviation(previousWidth, numberOfFeatures);
             _random = new GaussianRandom(0, stdDev);
@@ -67,42 +67,39 @@ namespace Skotz.Neural.Layer
 
         public double[,,] FeedForward(double[,,] values)
         {
-            var kernelBorder = (_featureSize - 1) / 2;
-            var padding = _pad ? kernelBorder : 0;
-
             // Save the inputs for backprop
             _inputs = values;
             _activations = new double[_outputWidth, _outputHeight, _numberOfFeatures];
 
-            for (int f = 0; f < _numberOfFeatures; f++)
+            for (var d = 0; d < _numberOfFeatures; d++)
             {
-                // Input dimensions (centered on the kernel)
-                for (int w = kernelBorder - padding; w < _previousLayerWidth - (kernelBorder - padding); w += _stride)
+                // Previous layer output
+                var y = -_pad;
+                for (var ay = 0; ay < _outputHeight; y += _stride, ay++)
                 {
-                    for (int h = kernelBorder - padding; h < _previousLayerHeight - (kernelBorder - padding); h += _stride)
+                    var x = -_pad;
+                    for (var ax = 0; ax < _outputWidth; x += _stride, ax++)
                     {
-                        // Kernel dimensions
-                        for (int kw = 0; kw < _featureSize; kw++)
+                        // Convolve with feature
+                        var convolution = 0.0;
+                        for (var fy = 0; fy < _featureSize; fy++)
                         {
-                            for (int kh = 0; kh < _featureSize; kh++)
+                            var inputY = y + fy;
+                            for (var fx = 0; fx < _featureSize; fx++)
                             {
-                                for (int kd = 0; kd < _previousLayerDepth; kd++)
+                                var inputX = x + fx;
+                                if (inputY >= 0 && inputY < _previousLayerHeight && inputX >= 0 && inputX < _previousLayerWidth)
                                 {
-                                    _activations[w - (kernelBorder - padding), h - (kernelBorder - padding), f] += _kernels[f, kw, kh, kd] * values[w + (kw - kernelBorder), h + (kh - kernelBorder), kd];
+                                    for (var fd = 0; fd < _previousLayerDepth; fd++)
+                                    {
+                                        convolution += _kernels[d, fx, fy, fd] * _inputs[inputX, inputY, fd];
+                                    }
                                 }
                             }
                         }
-                    }
-                }
-            }
 
-            for (int f = 0; f < _numberOfFeatures; f++)
-            {
-                for (int w = 0; w < _outputWidth; w += _stride)
-                {
-                    for (int h = 0; h < _outputHeight; h += _stride)
-                    {
-                        _activations[w, h, f] = _activationFunction.Run(_activations[w, h, f] + _biases[f]);
+                        // Activate
+                        _activations[ax, ay, d] = _activationFunction.Run(convolution + _biases[d]);
                     }
                 }
             }
@@ -113,9 +110,6 @@ namespace Skotz.Neural.Layer
         public double[,,] Backpropagate(double[,,] gradients, double learningRate)
         {
             var nextGradients = new double[_previousLayerWidth, _previousLayerHeight, _previousLayerDepth];
-
-            var kernelBorder = (_featureSize - 1) / 2;
-            var padding = _pad ? kernelBorder : 0;
 
             // Gradients coming in are with respect to the result of the activation function
             for (int w = 0; w < _outputWidth; w += _stride)
@@ -132,38 +126,59 @@ namespace Skotz.Neural.Layer
                 }
             }
 
-            // Gradients with respect to each weight in the kernel
-            for (int f = 0; f < _numberOfFeatures; f++)
+            var filterGradients = new double[_numberOfFeatures, _featureSize, _featureSize, _previousLayerDepth];
+
+            for (var d = 0; d < _numberOfFeatures; d++)
             {
-                for (int w = kernelBorder - padding; w < _previousLayerWidth - (kernelBorder - padding); w += _stride)
+                var y = -_pad;
+                for (var ay = 0; ay < _outputHeight; y += _stride, ay++)
                 {
-                    for (int h = kernelBorder - padding; h < _previousLayerHeight - (kernelBorder - padding); h += _stride)
+                    var x = -_pad;
+                    for (var ax = 0; ax < _outputWidth; x += _stride, ax++)
                     {
-                        for (int kw = 0; kw < _featureSize; kw++)
+                        var gradient = gradients[ax, ay, d];
+                        for (var fy = 0; fy < _featureSize; fy++)
                         {
-                            for (int kh = 0; kh < _featureSize; kh++)
+                            var inputY = y + fy;
+                            for (var fx = 0; fx < _featureSize; fx++)
                             {
-                                for (int kd = 0; kd < _previousLayerDepth; kd++)
+                                var inputX = x + fx;
+                                if (inputY >= 0 && inputY < _previousLayerHeight && inputX >= 0 && inputX < _previousLayerWidth)
                                 {
-                                    var weightGradientWHF = gradients[w - (kernelBorder - padding), h - (kernelBorder - padding), f] * _inputs[w + (kw - kernelBorder), h + (kh - kernelBorder), kd];
+                                    for (var fd = 0; fd < _previousLayerDepth; fd++)
+                                    {
+                                        filterGradients[d, fx, fy, fd] += _inputs[inputX, inputY, fd] * gradient;
 
-                                    // Update kernel based on gradient
-                                    _kernels[f, kw, kh, kd] -= weightGradientWHF * learningRate;
-
-                                    nextGradients[w - (kernelBorder - padding), h - (kernelBorder - padding), kd] += weightGradientWHF;
+                                        // Accumulate gradients to pass back to the previous layer
+                                        nextGradients[inputX, inputY, fd] += _kernels[d, fx, fy, fd] * gradient;
+                                    }
                                 }
                             }
                         }
+
+                        // Clip the gradient to avoid diverging to infinity
+                        gradient = ClipGradient(gradient);
+
+                        // Update biases
+                        _biases[d] += gradient * learningRate;
                     }
                 }
             }
 
-            //// Gradients for the biases of each neuron
-            //for (int n = 0; n < _numberOfFeatures; n++)
-            //{
-            //    // Update biases based on gradients
-            //    _biases[n] -= gradients[n] * learningRate;
-            //}
+            // Update features based on gradients
+            for (var d = 0; d < _numberOfFeatures; d++)
+            {
+                for (var fy = 0; fy < _featureSize; fy++)
+                {
+                    for (var fx = 0; fx < _featureSize; fx++)
+                    {
+                        for (var fd = 0; fd < _previousLayerDepth; fd++)
+                        {
+                            _kernels[d, fx, fy, fd] -= filterGradients[d, fx, fy, fd] * learningRate;
+                        }
+                    }
+                }
+            }
 
             return nextGradients;
         }
