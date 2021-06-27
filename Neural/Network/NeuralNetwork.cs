@@ -65,5 +65,36 @@ namespace Skotz.Neural.Network
 
             return totalLoss / samples.Count;
         }
+
+        public double TestLoss(List<ISample> samples)
+        {
+            var totalLoss = 0.0;
+
+            foreach (var sample in samples)
+            {
+                var output = FeedForward(sample);
+
+                totalLoss += _lossFunction.Total(output.Outputs, sample.Outputs);
+            }
+
+            return totalLoss / samples.Count;
+        }
+
+        public double TestRate<T>(List<ISample> samples, Func<T, T, bool> isCorrect) where T : ISample
+        {
+            var correct = 0.0;
+
+            foreach (var sample in samples)
+            {
+                var output = FeedForward(sample);
+
+                if (isCorrect((T)output, (T)sample))
+                {
+                    correct++;
+                }
+            }
+
+            return correct / samples.Count;
+        }
     }
 }

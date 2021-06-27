@@ -3,6 +3,7 @@ using Skotz.Neural.Layer;
 using Skotz.Neural.Loss;
 using Skotz.Neural.Network;
 using Skotz.Neural.Sample;
+using Skotz.Neural.Utility;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,9 +17,51 @@ namespace Example
         {
             //RunXorTest();
 
-            RunConvTest();
+            //RunConvTest();
+
+            RunMnistTest();
 
             Console.ReadKey();
+        }
+
+        private static void RunMnistTest()
+        {
+            var nn = new NeuralNetwork(new SquaredErrorLoss(), 0.001);
+            nn.Add(new ConvolutionLayer(28, 28, 1, 3, 32, new LeakyReLuActivation()));
+            //nn.Add(new ConvolutionLayer(26, 26, 10, 3, 5, new LeakyReLuActivation()));
+            nn.Add(new FlattenLayer(26, 26, 32));
+            nn.Add(new FullyConnectedLayer(26 * 26 * 32, 10, new LeakyReLuActivation()));
+            //nn.Add(new FullyConnectedLayer(100, 10, new LeakyReLuActivation()));
+
+            var reader = new MnistReader("j:\\mnist");
+            var training = reader.GetTrainingSamples();
+            var testing = reader.GetTestingSamples();
+
+            // Only use a subset of the data
+            testing.Shuffle();
+            testing = testing.Take(100).ToList();
+
+            var loss = 1.0;
+
+            using (var w = new StreamWriter("results-mnist-cnn.csv"))
+            {
+                w.WriteLine("iteration,trainLoss,testLoss,testRate");
+
+                for (int i = 0; i < 100 && loss > 0.05; i++)
+                {
+                    training.Shuffle();
+                    var subset = training.Take(100).ToList();
+
+                    loss = nn.Train(subset);
+
+                    var test = nn.TestLoss(testing);
+                    var rate = nn.TestRate<ImageSample>(testing, (c, n) => c.OutputToIndex() == n.OutputToIndex());
+
+                    Console.WriteLine($"Iteration {i}\tLoss {loss}\tTest {test}\tCorrect {rate}");
+
+                    w.WriteLine($"{i},{loss},{test},{rate}");
+                }
+            }
         }
 
         private static void RunConvTest()

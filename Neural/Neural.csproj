@@ -58,6 +58,7 @@
     <Compile Include="Network\NeuralNetwork.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utility\ListShuffle.cs" />
+    <Compile Include="Utility\MnistReader.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -49,6 +49,23 @@ namespace Skotz.Neural.Sample
             }
         }
 
+        public int OutputToIndex()
+        {
+            var max = double.MinValue;
+            var index = -1;
+
+            for (int i = 0; i < Outputs.GetLength(0); i++)
+            {
+                if (Outputs[i, 0, 0] > max)
+                {
+                    max = Outputs[i, 0, 0];
+                    index = i;
+                }
+            }
+
+            return index;
+        }
+
         public string OutputsToString()
         {
             var sb = new StringBuilder();

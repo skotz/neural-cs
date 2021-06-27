@@ -20,3 +20,12 @@ nn.Add(new FullyConnectedLayer(100, 2, new LeakyReLuActivation()));
 ```
 
 ![xor](Docs/cnn.png)
+
+```
+var nn = new NeuralNetwork(new SquaredErrorLoss(), 0.001);
+nn.Add(new ConvolutionLayer(28, 28, 1, 3, 32, new LeakyReLuActivation()));
+nn.Add(new FlattenLayer(26, 26, 32));
+nn.Add(new FullyConnectedLayer(26 * 26 * 32, 10, new LeakyReLuActivation()));
+```
+
+![xor](Docs/cnn2.png)
