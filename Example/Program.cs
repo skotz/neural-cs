@@ -26,12 +26,21 @@ namespace Example
 
         private static void RunMnistTest()
         {
-            var nn = new NeuralNetwork(new SquaredErrorLoss(), 0.001);
+            var nn = new NeuralNetwork(new SquaredErrorLoss(), 0.0001);
             nn.Add(new ConvolutionLayer(28, 28, 1, 3, 32, new LeakyReLuActivation()));
             //nn.Add(new ConvolutionLayer(26, 26, 10, 3, 5, new LeakyReLuActivation()));
             nn.Add(new FlattenLayer(26, 26, 32));
             nn.Add(new FullyConnectedLayer(26 * 26 * 32, 10, new LeakyReLuActivation()));
             //nn.Add(new FullyConnectedLayer(100, 10, new LeakyReLuActivation()));
+
+            if (File.Exists("nn.dat"))
+            {
+                using (var save = new FileStream("nn.dat", FileMode.Open))
+                {
+                    nn.Load(save);
+                }
+                Console.WriteLine("Loaded model");
+            }
 
             var reader = new MnistReader("j:\\mnist");
             var training = reader.GetTrainingSamples();
@@ -60,6 +69,11 @@ namespace Example
                     Console.WriteLine($"Iteration {i}\tLoss {loss}\tTest {test}\tCorrect {rate}");
 
                     w.WriteLine($"{i},{loss},{test},{rate}");
+
+                    using (var save = new FileStream("nn.dat", FileMode.Create))
+                    {
+                        nn.Save(save);
+                    }
                 }
             }
         }

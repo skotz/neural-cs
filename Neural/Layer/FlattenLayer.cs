@@ -1,4 +1,6 @@
-﻿namespace Skotz.Neural.Layer
+﻿using System.IO;
+
+namespace Skotz.Neural.Layer
 {
     public class FlattenLayer : ILayer
     {
@@ -47,6 +49,14 @@
             }
 
             return output;
+        }
+
+        public void Save(BinaryWriter writer)
+        {
+        }
+
+        public void Load(BinaryReader reader)
+        {
         }
     }
 }

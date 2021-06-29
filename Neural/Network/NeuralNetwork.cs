@@ -4,6 +4,7 @@ using Skotz.Neural.Sample;
 using Skotz.Neural.Utility;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Skotz.Neural.Network
 {
@@ -95,6 +96,28 @@ namespace Skotz.Neural.Network
             }
 
             return correct / samples.Count;
+        }
+
+        public void Save(Stream stream)
+        {
+            using (var w = new BinaryWriter(stream))
+            {
+                foreach (var layer in _layers)
+                {
+                    layer.Save(w);
+                }
+            }
+        }
+
+        public void Load(Stream stream)
+        {
+            using (var r = new BinaryReader(stream))
+            {
+                foreach (var layer in _layers)
+                {
+                    layer.Load(r);
+                }
+            }
         }
     }
 }

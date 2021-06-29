@@ -1,6 +1,7 @@
 ﻿using Skotz.Neural.Activation;
 using Skotz.Neural.Utility;
 using System;
+using System.IO;
 
 namespace Skotz.Neural.Layer
 {
@@ -186,6 +187,50 @@ namespace Skotz.Neural.Layer
         private double ClipGradient(double gradient)
         {
             return Math.Min(Math.Max(gradient, -1), 1);
+        }
+
+        public void Save(BinaryWriter writer)
+        {
+            for (int i = 0; i < _kernels.GetLength(0); i++)
+            {
+                for (int j = 0; j < _kernels.GetLength(1); j++)
+                {
+                    for (int k = 0; k < _kernels.GetLength(2); k++)
+                    {
+                        for (int l = 0; l < _kernels.GetLength(3); l++)
+                        {
+                            writer.Write(_kernels[i, j, k, l]);
+                        }
+                    }
+                }
+            }
+
+            for (int i = 0; i < _biases.GetLength(0); i++)
+            {
+                writer.Write(_biases[i]);
+            }
+        }
+
+        public void Load(BinaryReader reader)
+        {
+            for (int i = 0; i < _kernels.GetLength(0); i++)
+            {
+                for (int j = 0; j < _kernels.GetLength(1); j++)
+                {
+                    for (int k = 0; k < _kernels.GetLength(2); k++)
+                    {
+                        for (int l = 0; l < _kernels.GetLength(3); l++)
+                        {
+                            _kernels[i, j, k, l] = reader.ReadDouble();
+                        }
+                    }
+                }
+            }
+
+            for (int i = 0; i < _biases.GetLength(0); i++)
+            {
+                _biases[i] = reader.ReadDouble();
+            }
         }
     }
 }
