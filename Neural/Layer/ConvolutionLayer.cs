@@ -27,7 +27,7 @@ namespace Skotz.Neural.Layer
         private double[,,] _inputs;
         private double[,,] _activations;
 
-        public ConvolutionLayer(int previousWidth, int previousHeight, int previousDepth, int featureSize, int numberOfFeatures, IActivation activation)
+        public ConvolutionLayer(int previousWidth, int previousHeight, int previousDepth, int featureSize, int numberOfFeatures, int stride, IActivation activation)
         {
             _activationFunction = activation;
 
@@ -40,10 +40,18 @@ namespace Skotz.Neural.Layer
 
             // TODO
             _pad = 0;
-            _stride = 1;
+            _stride = stride;
 
-            _outputWidth = _pad > 0 ? _previousLayerWidth : (_previousLayerWidth - _featureSize + 1);
-            _outputHeight = _pad > 0 ? _previousLayerHeight : (_previousLayerHeight - _featureSize + 1);
+            if (_stride > 1)
+            {
+                _outputWidth = _previousLayerWidth / stride;
+                _outputHeight = _previousLayerHeight / stride;
+            }
+            else
+            {
+                _outputWidth = _pad > 0 ? _previousLayerWidth : (_previousLayerWidth - _featureSize + 1);
+                _outputHeight = _pad > 0 ? _previousLayerHeight : (_previousLayerHeight - _featureSize + 1);
+            }
 
             var stdDev = _activationFunction.StandardDeviation(previousWidth, numberOfFeatures);
             _random = new GaussianRandom(0, stdDev);

@@ -19,16 +19,70 @@ namespace Example
 
             //RunConvTest();
 
-            RunMnistTest();
+            RunMnistTest2();
 
             Console.ReadKey();
+        }
+
+        private static void RunMnistTest2()
+        {
+            var nn = new NeuralNetwork(new SquaredErrorLoss(), 0.0001);
+            nn.Add(new ConvolutionLayer(28, 28, 1, 3, 32, 4, new LeakyReLuActivation()));
+            //nn.Add(new ConvolutionLayer(26, 26, 10, 3, 5, 1, new LeakyReLuActivation()));
+            nn.Add(new FlattenLayer(7, 7, 32));
+            nn.Add(new FullyConnectedLayer(7 * 7 * 32, 10, new LeakyReLuActivation()));
+            //nn.Add(new FullyConnectedLayer(100, 10, new LeakyReLuActivation()));
+
+            if (File.Exists("nn2.dat"))
+            {
+                using (var save = new FileStream("nn2.dat", FileMode.Open))
+                {
+                    nn.Load(save);
+                }
+                Console.WriteLine("Loaded model");
+            }
+
+            var reader = new MnistReader("j:\\mnist");
+            var training = reader.GetTrainingSamples();
+            var testing = reader.GetTestingSamples();
+
+            // Only use a subset of the data
+            testing.Shuffle();
+            testing = testing.Take(100).ToList();
+
+            var loss = 1.0;
+
+            using (var w = new StreamWriter("results-mnist-cnn-2.csv"))
+            {
+                w.WriteLine("iteration,trainLoss,testLoss,testRate");
+
+                for (int i = 0; i < 100 && loss > 0.05; i++)
+                {
+                    training.Shuffle();
+                    var subset = training.Take(100).ToList();
+
+                    loss = nn.Train(subset);
+
+                    var test = nn.TestLoss(testing);
+                    var rate = nn.TestRate<ImageSample>(testing, (c, n) => c.OutputToIndex() == n.OutputToIndex());
+
+                    Console.WriteLine($"Iteration {i}\tLoss {loss}\tTest {test}\tCorrect {rate}");
+
+                    w.WriteLine($"{i},{loss},{test},{rate}");
+
+                    using (var save = new FileStream("nn2.dat", FileMode.Create))
+                    {
+                        nn.Save(save);
+                    }
+                }
+            }
         }
 
         private static void RunMnistTest()
         {
             var nn = new NeuralNetwork(new SquaredErrorLoss(), 0.0001);
-            nn.Add(new ConvolutionLayer(28, 28, 1, 3, 32, new LeakyReLuActivation()));
-            //nn.Add(new ConvolutionLayer(26, 26, 10, 3, 5, new LeakyReLuActivation()));
+            nn.Add(new ConvolutionLayer(28, 28, 1, 3, 32, 1, new LeakyReLuActivation()));
+            //nn.Add(new ConvolutionLayer(26, 26, 10, 3, 5, 1, new LeakyReLuActivation()));
             nn.Add(new FlattenLayer(26, 26, 32));
             nn.Add(new FullyConnectedLayer(26 * 26 * 32, 10, new LeakyReLuActivation()));
             //nn.Add(new FullyConnectedLayer(100, 10, new LeakyReLuActivation()));
@@ -81,8 +135,8 @@ namespace Example
         private static void RunConvTest()
         {
             var nn = new NeuralNetwork(new SquaredErrorLoss(), 0.0001);
-            nn.Add(new ConvolutionLayer(24, 24, 3, 3, 10, new LeakyReLuActivation()));
-            nn.Add(new ConvolutionLayer(22, 22, 10, 3, 5, new LeakyReLuActivation()));
+            nn.Add(new ConvolutionLayer(24, 24, 3, 3, 10, 1, new LeakyReLuActivation()));
+            nn.Add(new ConvolutionLayer(22, 22, 10, 3, 5, 1, new LeakyReLuActivation()));
             nn.Add(new FlattenLayer(20, 20, 5));
             nn.Add(new FullyConnectedLayer(20 * 20 * 5, 100, new LeakyReLuActivation()));
             nn.Add(new FullyConnectedLayer(100, 2, new LeakyReLuActivation()));
